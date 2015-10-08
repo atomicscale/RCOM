@@ -72,16 +72,6 @@ int main(int argc, char** argv)
     }
 
 
-    /* Verificar flags */
-
-    res = read(fd,buf,5);
-    if(buf[0]=FLAG && buf[1]=A && buf[2]=C && buf[3]=BCC && buf[4]=FLAG){
-      printf("okapa");
-    }
-    else{
-      printf("non okapa");
-    }
-
     printf("New termios structure set\n");
 
 
