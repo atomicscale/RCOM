@@ -85,35 +85,23 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
 
 
-    // Send a string (Ola)
+    // Send a string até "/n"
 
-  while (STOP==FALSE) {       /* loop for input */
-    res = read(fd,buf,4);   /* returns after 4 chars have been input */
-    buf[res]=0;               /* so we can printf... */
-    printf(":%s:%d\n", buf, res);
+    res = 0;
 
-	if (buf[res]=='O'){ 
-	 printf("Recebi o O\n");
-	 res++;
-  }
-	if (buf[res]=='l'){ 
-	 printf("Recebi o l\n");
-	 res++;
-  }
-	if (buf[res]=='a'){ 
-	 printf("Recebi o a\n");
-	 res++;
-  }
-	if (buf[res]=='\0'){ 
-	 STOP=TRUE;
-	 printf("Done: ");
-	 printf("%s", buf);
-  }
-	else{
-	 printf("FUUU\n");
-	 STOP=TRUE;
-	}
-}
+    while (STOP==FALSE) {       /* loop for input */
+      res += read(fd,buf+res,1);   /* returns after 1 char has been input */
+      if (buf[res-1] == '\0') {
+        STOP = TRUE;
+      }
+    }
+
+    printf("Read message: %s (%d bytes)\n", buf, res);
+
+    res = write(fd, buf, res);
+    printf("Message resent (%d bytes)\n", res);
+
+    sleep(5);
 
   tcsetattr(fd,TCSANOW,&oldtio);
   close(fd);
