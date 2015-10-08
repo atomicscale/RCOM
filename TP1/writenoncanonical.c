@@ -68,14 +68,14 @@ int main(int argc, char** argv)
     res = write(fd,buf,strlen(buf) + 1);   
     printf("%d bytes written\n", res);
 
-    while (STOP == FALSE){
+   /* while (STOP == FALSE){
     	res = res + read(fd,bus+res,1);
     	if(buf[res-1] == "\0"){
     		STOP = TRUE;
     	}
 
     }
-
+*/
       sleep(5);
 
     
