@@ -8,17 +8,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define _POSIX_SOURCE 	1 /* POSIX compliant source */
-#define FALSE 			0
-#define TRUE 			1
-#define FLAG 			0x7e
-#define A 				0x03
+#define _POSIX_SOURCE 1 /* POSIX compliant source */
+#define FALSE 0
+#define TRUE 1
+#define FLAG 0x7e
+#define A 0x03
+#define C (structDados.sender ? 0x03 : 0x07)
 
-
-void initalizeSender();
-void initializeReceiver();
-void intializeTypeOfTransmission();
-void callAlarm();
+void prepareSender();
+void prepareReceiver();
+void startstruct();
+void atendeAlarme();
 int llopen();
 void sendSET(int fd);
 void sendUA(int fd);
