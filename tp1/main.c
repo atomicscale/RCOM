@@ -680,7 +680,7 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 	}
 
 	int OK = FALSE; // Recebeu RR corretamente?
-	while (trySend <= data->maxTransmissions) {
+	while (trySend <= data.maxTransmissions) {
 		if (OK) break;
 		else if (canSend) {
 			printf("Sending frame: ");
