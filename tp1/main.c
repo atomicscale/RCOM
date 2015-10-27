@@ -1,4 +1,4 @@
-#include <include.h>
+#include "include.h"
 
 #define _POSIX_SOURCE 	1 /* POSIX compliant source */
 #define FALSE 			0
@@ -14,6 +14,8 @@ volatile int state = 0;
 volatile int trySend = 1;
 volatile int canSend = TRUE;
 
+int duplicate = FALSE;
+
 struct termios oldtio;
 
 /* auxiliary function to clean screen */
@@ -26,11 +28,10 @@ void cleanScreen() {
 
 int main(int argc, char** argv){
 
-	srand(time(NULL)); /*  Nao percebo **********/  
-	signal(SIGALARM, callAlarm()); /* Install the alarm */
+	signal(SIGALRM, callAlarm()); /* Install the alarm */
 	setvbuf(stdout,NULL,_IONBF,0); /* Disables the STDOUT */
 
-	while(true) {
+	while(1) {
 
 		cleanScreen();
 
@@ -59,7 +60,7 @@ int main(int argc, char** argv){
 
 			return 0;
 		} else if(choice == 2){
-			printf("Exiting program! \n")
+			printf("Exiting program! \n");
 			return 2;
 		}
 		  else
@@ -76,7 +77,7 @@ void initalizeSender(){
 
 	if((data.fp = fopen(data.fileName,"rb")) != NULL){
 		fseek(data.fp, 0, SEEK_END); /* specifies that the offset provided is relative to the end of the file */
-		data.fileSize = ftell(data.fp); /* give the size of the file */
+		data.filesize = ftell(data.fp); /* give the size of the file */
 		rewind(data.fp); /* sets the file position to the beginning of the file */
 	} else {
 		printf("File not found! \n");
@@ -101,7 +102,7 @@ void initializeReceiver(){
 void intializeTypeOfTransmission(){
 
 	/* Get if we are receiving or sending */
-	while(true) {
+	while(1) {
 
 		cleanScreen();
 		printf("What you want to do? \n");
@@ -593,6 +594,8 @@ int llwrite() {
 	CTRL_START[i++] = (unsigned char)(data.filesize & 0xff);
 	CTRL_START[i++] = 0x01; // A enviar nome do ficheiro
 	CTRL_START[i++] = strlen(data.fileName) + 1; 
+
+	unsigned int j;
 
 	for (j = 0; j < strlen(data.fileName) + 1; j++) {
 		CTRL_START[i++] = data.fileName[j];
