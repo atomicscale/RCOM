@@ -137,7 +137,7 @@ void intializeTypeOfTransmission(){
 	snprintf(data.port, sizeof(data.port), "/dev/ttyS%d", choicePort);
 
 	/* Getting the Baudrate */
-	while(true) {
+	while(1) {
 		
 		cleanScreen();
 		printf("Which BAUDRATE do you prefer?\n");
