@@ -8,7 +8,7 @@
 #define C 				(data.sender ? 0x03 : 0x07)
 
 /* Some usefull variables */
-static Data *data;
+static Data data;
 
 volatile int state = 0;
 volatile int trySend = 1;
@@ -680,7 +680,7 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 	}
 
 	int OK = FALSE; // Recebeu RR corretamente?
-	while (trySend <= data.maxTransmissions) {
+	while (trySend <= data->maxTransmissions) {
 		if (OK) break;
 		else if (canSend) {
 			printf("Sending frame: ");
