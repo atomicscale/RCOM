@@ -1,14 +1,4 @@
-#include <fcntl.h>
-#include <termios.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <data_settings.h>
+#include <include.h>
 
 #define _POSIX_SOURCE 	1 /* POSIX compliant source */
 #define FALSE 			0
@@ -18,7 +8,7 @@
 #define C 				(data.sender ? 0x03 : 0x07)
 
 /* Some usefull variables */
-DataSettings data;
+static Data data;
 
 volatile int state = 0;
 volatile int trySend = 1;
@@ -45,7 +35,7 @@ int main(int argc, char** argv){
 		cleanScreen();
 
 		printf("-----------------------\n");
-		printf("    RCOM PROJECT 1516  \n");
+		printf("-  RCOM PROJECT 1516  -\n");
 		printf("-----------------------\n");
 		printf("- 1. Send / Receive   -\n");
 		printf("- 2. Exit             -\n");
@@ -483,7 +473,7 @@ void sendUA(int fd) {
 }
 
 void callAlarm()  {
-	printf("Bad response #%d from receiver!\n", trySend);
+	printf("Bad response %d from receiver!\n", trySend);
 	trySend++;
 	canSend = TRUE;
 	state = 0;
