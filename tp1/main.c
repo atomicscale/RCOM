@@ -8,7 +8,7 @@
 #define C 				(data.sender ? 0x03 : 0x07)
 
 /* Some usefull variables */
-static Data data;
+static Data *data;
 
 volatile int state = 0;
 volatile int trySend = 1;
