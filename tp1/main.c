@@ -28,7 +28,7 @@ void cleanScreen() {
 
 int main(int argc, char** argv){
 
-	signal(SIGALRM, callAlarm()); /* Install the alarm */
+	signal(SIGALRM, callAlarm); /* Install the alarm */
 	setvbuf(stdout,NULL,_IONBF,0); /* Disables the STDOUT */
 
 	while(1) {
@@ -111,10 +111,10 @@ void intializeTypeOfTransmission(){
 		char choice = getchar();
 
 		if(choice == 1){
-			data.sender = true;
+			data.sender = TRUE;
 			break;
 		} else if(choice == 2){
-			data.sender = false;
+			data.sender = FALSE;
 			break;
 		} else 
 			printf("Invalid input! Try again!");
