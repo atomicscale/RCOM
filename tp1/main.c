@@ -29,6 +29,8 @@ volatile int state = 0;
 volatile int trySend = 1;
 volatile int canSend = TRUE;
 
+unsigned char lastN = 255;
+
 int duplicate = FALSE;
 
 struct termios oldtio;
@@ -695,6 +697,7 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 	}
 
 	int OK = FALSE; // Recebeu RR corretamente?
+
 	while (trySend <= data.maxTransmissions) {
 		if (OK) break;
 		else if (canSend) {
@@ -1038,7 +1041,7 @@ void senderDISC(unsigned char* DISC) {
 	unsigned char c;
 	unsigned char buf[5]; 
 
-	while (trySend <= data.numTransmissions) {
+	while (trySend <= data.maxTransmissions) {
 		if (canSend) {
 			canSend = FALSE;
 			alarm(data.timeout);
@@ -1123,7 +1126,7 @@ void senderDISC(unsigned char* DISC) {
 						state = 5;
 						printf("DISC: Switching to state 5\n");
 						buf[4] = c;
-						trySend = data.numTransmissions + 1; // Obrigar a sair do ciclo
+						trySend = data.maxTransmissions + 1; // Obrigar a sair do ciclo
 					}
 					else {
 						state = 0;
