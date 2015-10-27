@@ -25,7 +25,7 @@ typedef struct DataSettings {
 	unsigned int timeout; 	// Timer: 1s
 	unsigned int maxTransmissions; // Maximum of failed attempts
 	unsigned int maxSize; // Size of each frame
-} Data;
+};
 
 void initalizeSender();
 void initializeReceiver();
