@@ -20,6 +20,7 @@ typedef struct UserSettings {
 
 static Settings structDados;
 
+
 unsigned char lastN = 255;
 int duplicate = FALSE;
 
@@ -224,7 +225,7 @@ void sendSET(int fd) {
 	unsigned char SET[5]; // Trama SET
 	SET[0] = FLAG;
 	SET[1] = A;
-	SET[2] = 0x07; // 0x07****
+	SET[2] = 0x07; //
 	SET[3] = SET[1] ^ SET[2];
 	SET[4] = FLAG;
 
@@ -280,7 +281,7 @@ void sendSET(int fd) {
 					}
 					break;
 				case 2:
-					if (c == 0x03) { // 0x03****
+					if (c == 0x03) { //
 						estado = 3;
 						printf("UA: Switching to state 3\n");
 						buf[2] = c;
@@ -296,7 +297,7 @@ void sendSET(int fd) {
 					}
 					break;
 				case 3:
-					if (c == (A ^ 0x03)) { // 0x03****
+					if (c == (A ^ 0x03)) {  //
 						estado = 4;
 						printf("UA: Switching to state 4\n");
 						buf[3] = c;
@@ -336,8 +337,8 @@ void sendUA(int fd) {
 	unsigned char UA[5]; // Trama UA (unnumbered acknowledgement)
 	UA[0] = FLAG;
 	UA[1] = A;
-	UA[2] = 0x03; // 0x03****
-	UA[3] = UA[1] ^ UA[2];
+	UA[2] = 0x03; //
+	UA[3] = A ^ 0x03; //
 	UA[4] = FLAG;
 
 	unsigned char c;
@@ -372,7 +373,7 @@ void sendUA(int fd) {
 			}
 			break;
 		case 2:
-			if (c == 0x07) { // 0x07****
+			if (c == 0x07) { //
 				estado = 3;
 				printf("SET: Switching to state 3\n");
 				buf[2] = c;
@@ -388,7 +389,7 @@ void sendUA(int fd) {
 			}
 			break;
 		case 3:
-			if (c == (A ^ 0x07)) { // 0x07****
+			if (c == (A ^ 0x07)) { //
 				estado = 4;
 				printf("SET: Switching to state 4\n");
 				buf[3] = c;
@@ -418,6 +419,7 @@ void sendUA(int fd) {
 	}
 
 	write(fd, UA, 5);
+	//sleep(1);
 }
 
 void atendeAlarme()  {
@@ -432,7 +434,7 @@ int llwrite() {
 	unsigned int i = 0;
 
 	unsigned char CTRL_START[11 + strlen(structDados.fileName) + 1];
-	CTRL_START[i++] = 0x01; // Indica início // 0x01****
+	CTRL_START[i++] = 0x02; // Indica início
 	CTRL_START[i++] = 0x00; // A enviar tamanho do ficheiro
 	CTRL_START[i++] = 0x02; // 2 bytes
 	CTRL_START[i++] = (unsigned char)((structDados.filesize & 0xff00) >> 8); // Tamanho do ficheiro
@@ -457,7 +459,7 @@ int llwrite() {
 
 	do {
 		unsigned char DATA_PACK[structDados.maxSize];
-		DATA_PACK[0] = 0x00; // Indica dados // 0x00****
+		DATA_PACK[0] = 0x01; // Indica dados
 		DATA_PACK[1] = numPack++ % 256; // Número de sequência
 		resRead = fread(DATA_PACK + 4, sizeof(unsigned char), structDados.maxSize - 4, structDados.fp);
 		DATA_PACK[2] = (resRead >> 8) & 0xff;
@@ -468,7 +470,7 @@ int llwrite() {
 	} while (resRead);
 
 	unsigned char CTRL_STOP[1];
-	CTRL_STOP[0] = 0x02; // Indica paragem // 0x02****
+	CTRL_STOP[0] = 0x03; // Indica paragem
 	if (linkwrite(CTRL_STOP, 1, Ns) < 0) return -1;
 	Ns = (Ns + 1) % 2;
 
@@ -486,7 +488,7 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 	unsigned char FRAME_I[6 + datasize];
 	FRAME_I[0] = FLAG;
 	FRAME_I[1] = A;
-	FRAME_I[2] = Ns == 0 ? 0x00 : 0x20; // 0x40 -> 0x20****
+	FRAME_I[2] = Ns == 0 ? 0x00 : 0x20;    //
 	FRAME_I[3] = FRAME_I[1] ^ FRAME_I[2];
 	unsigned char BCC2 = 0x00;
 	int i;
@@ -551,11 +553,11 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 				}
 				break;
 			case 2:
-				if (c == (Ns == 0 ? 0x21 : 0x01)) { // 0x85 -> 0x21; 0x05 -> 0x01****
+				if (c == (Ns == 0 ? 0x21 : 0x01)) { //
 					estado = 3;
 					printf("Confirmation: positive. Switching to state 3\n");
 				}
-				else if (c == 0x05 || c == 0x25) { // 0x01 -> 0x05; 0x81 -> 0x25****
+				else if (c == 0x05 || c == 0x25) { //
 					podeEnviar = TRUE;
 					estado = 0;
 					printf("Confirmation: negative. Resending...\n");
@@ -570,7 +572,7 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 				}
 				break;
 			case 3:
-				if (c == (A ^ (Ns == 0 ? 0x21 : 0x01))) { // 0x85 -> 0x21; 0x05 -> 0x01****
+				if (c == (A ^ (Ns == 0 ? 0x21 : 0x01))) { //
 					estado = 4;
 					printf("Confirmation: Switching to state 4\n");
 				}
@@ -620,12 +622,12 @@ int llread() {
 		int packageSize = linkread(dataPackage);
 
 		if (packageSize == -1) {
-			REJ[2] = (Nr == 0) ? 0x05 : 0x25; // 0x01 -> 0x05; 0x81 -> 0x25****
+			REJ[2] = (Nr == 0) ? 0x05 : 0x25;
 			REJ[3] = REJ[1] ^ REJ[2];
 			tcflush(structDados.fd, TCIFLUSH);
 			write(structDados.fd, REJ, 5);
 		}
-		else if (dataPackage[0] == 0x00) { // 0x00****
+		else if (dataPackage[0] == 0x01) {
 			int posPackage = 0;
 			if (duplicate) printf("Duplicate frame!\n");
 			while (posPackage < packageSize && !duplicate) {
@@ -635,11 +637,11 @@ int llread() {
 			}
 			if (!duplicate) Nr = (Nr + 1) % 2;
 			duplicate = FALSE;
-			RR[2] = (Nr == 0) ? 0x01 : 0x21; // 0x05 -> 0x01; 0x85 -> 0x21****
+			RR[2] = (Nr == 0) ? 0x01 : 0x21;//
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados.fd, RR, 5);
 		}
-		else if (dataPackage[0] == 0x01) { // 0x01****
+		else if (dataPackage[0] == 0x02) {
 			unsigned int i = 1;
 			unsigned int j;
 
@@ -665,13 +667,13 @@ int llread() {
 			}
 
 			Nr = (Nr + 1) % 2;
-			RR[2] = (Nr == 0) ? 0x01 : 0x21; // 0x05 -> 0x01; 0x85 -> 0x21****
+			RR[2] = (Nr == 0) ? 0x01 : 0x21;//
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados.fd, RR, 5);
 		}
-		else if (dataPackage[0] == 0x02) { // 0x02****
+		else if (dataPackage[0] == 0x03) {
 			Nr = (Nr + 1) % 2;
-			RR[2] = (Nr == 0) ? 0x01 : 0x21; // 0x05 -> 0x01; 0x85 -> 0x21****
+			RR[2] = (Nr == 0) ? 0x01 : 0x21;//
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados.fd, RR, 5);
 			break;
@@ -721,7 +723,7 @@ int linkread(unsigned char* dataPackage) {
 				wasREJsent = TRUE;
 			break;
 		case 2:
-			if (c == 0x00 || c == 0x20) // 0x40 -> 0x20****
+			if (c == 0x00 || c == 0x20) //
 				buf[estado++] = c;
 			else
 				wasREJsent = TRUE;
@@ -735,7 +737,7 @@ int linkread(unsigned char* dataPackage) {
 		case 4:
 		{
 			int megaEstado = 0;
-			if (c == 0x00) { // 0x00****
+			if (c == 0x01) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c; // C
 				Controlo = c;
@@ -778,7 +780,7 @@ int linkread(unsigned char* dataPackage) {
 				}
 				estado = 5;
 			}
-			else if (c == 0x01) { // 0x01****
+			else if (c == 0x02) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 
@@ -862,7 +864,7 @@ int linkread(unsigned char* dataPackage) {
 
 				estado = 5;
 			}
-			else if (c == 0x02) { // 0x02****
+			else if (c == 0x03) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 				estado = 5;
@@ -898,9 +900,9 @@ int linkread(unsigned char* dataPackage) {
 	printf("WasRejSent: %d (bcc2 = %d)\n", wasREJsent, bcc2);
 	if (wasREJsent) return -1;
 
-	if (Controlo == 0x00) { // Se foi pacote de dados... // 0x00****
+	if (Controlo == 0x01) { // Se foi pacote de dados...
 		if (N == lastN) duplicate = TRUE;
-		lastN = N;
+		lastN = N; 
 	}
 
 	return packagesLength;
@@ -914,7 +916,7 @@ int llclose() {
 	DISC[0] = FLAG;
 	DISC[1] = A;
 	DISC[2] = 0x0B;
-	DISC[3] = DISC[1] ^ DISC[2];
+	DISC[3] = A ^ 0x0B;
 	DISC[4] = FLAG;
 
 	if (structDados.sender == TRUE)
@@ -1041,8 +1043,8 @@ void senderDISC(unsigned char* DISC) {
 	unsigned char UA[5]; // Trama UA (unnumbered acknowledgement)
 	UA[0] = FLAG;
 	UA[1] = A;
-	UA[2] = 0x03; // 0x03****
-	UA[3] = UA[1] ^ UA[2];
+	UA[2] = 0x03; //
+	UA[3] = A ^ 0x03; //
 	UA[4] = FLAG;
 
 	write(structDados.fd, UA, 5);
@@ -1162,7 +1164,7 @@ void receiverDISC(unsigned char* DISC) {
 			}
 			break;
 		case 2:
-			if (c == 0x03) { // 0x03****
+			if (c == 0x03) { //
 				estado = 3;
 				printf("UA: Switching to state 3\n");
 				buf[2] = c;
@@ -1178,7 +1180,7 @@ void receiverDISC(unsigned char* DISC) {
 			}
 			break;
 		case 3:
-			if (c == (A ^ 0x03)) { // 0x03****
+			if (c == (A ^ 0x03)) { //
 				estado = 4;
 				printf("UA: Switching to state 4\n");
 				buf[3] = c;
