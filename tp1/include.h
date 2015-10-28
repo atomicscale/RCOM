@@ -1,3 +1,6 @@
+/*
+ * Some usefull variables for the assigment
+ */
 #include <fcntl.h>
 #include <termios.h>
 #include <signal.h>
@@ -8,25 +11,37 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
-#define FLAG 0x7e
-#define A 0x03
-#define C (structDados.sender ? 0x03 : 0x07)
+#define _POSIX_SOURCE 	1 	/* POSIX compliant source */
+#define FALSE 			0   
+#define TRUE 			1
+#define FLAG 			0x7e
+#define A 				0x03
 
-void prepareSender();
-void prepareReceiver();
-void startstruct();
-void atendeAlarme();
-int llopen();
-void sendSET(int fd);
-void sendUA(int fd);
-int llwrite();
-int linkwrite(unsigned char*, int, int);
-int llread();
-int linkread(unsigned char*);
-int llclose();
-void senderDISC(unsigned char*);
-void receiverDISC(unsigned char*);
+void initializeSender();				/*  Initialize The Sender Port */
+
+void initialzeReceiver();         		/*  Initialize The Receiver Port */
+
+void initializeTypeOfTransmission();	/*  Initialize the type of transmission */
+
+void callAlarm();						/*  Function to control the conection */
+
+int llopen();							/*  Open The Serial Port */
+
+void sendSET(int fd);					/* 	Function to send the SET-TRAMA */
+
+void sendUA(int fd);					/* 	Function to send the UA-TRAMA */
+
+int llwrite();							/* 	Writting to the serial Port*/
+
+int linkwrite(unsigned char*, int, int); /* Auxiliary function to write to the port */
+
+int llread();							/*  Reading from the serial port */
+
+int linkread(unsigned char*);			/* 	Auxiliary function to read to the port*/
+
+int llclose();							/* 	Closing the port */
+
+void senderDISC(unsigned char*);        /* 	Send the DIS-TRAMA */
+
+void receiverDISC(unsigned char*);		/* 	Receive the DIS-TRAMA */
 
