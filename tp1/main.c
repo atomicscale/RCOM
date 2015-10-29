@@ -1,6 +1,7 @@
-/*Non-Canonical Input Processing*/
+/* Non-Canonical Input Processing */
 
 #include "include.h"
+#include "interface.h"
 
 /*  Usefull variables to controle the packages */
 volatile int estado = 0, tentativaEnvio = 1, podeEnviar = TRUE;
@@ -10,7 +11,7 @@ struct termios oldtio;
  * Struct that allows us saving all the information about the transmission
  */
 typedef struct UserSettings {
-	
+
 	int fd;
 	FILE* fp;
 	char fileName[255];
@@ -21,7 +22,7 @@ typedef struct UserSettings {
 	unsigned int timeout; // Valor do temporizador: 1 s
 	unsigned int numTransmissions; // Número de tentativas em caso de falha
 	unsigned int maxSize;
-	
+
 } Settings;
 
 static Settings structDados;
@@ -34,21 +35,12 @@ int duplicate = FALSE;
  */
 int main(int argc, char** argv) {
 
-	signal(SIGALRM, atendeAlarme); // Instalar alarme
-	setvbuf(stdout, NULL, _IONBF, 0); // Desativar buffer do STDOUT
+	signal(SIGALRM, atendeAlarme); /* Instalar alarme */
+	setvbuf(stdout, NULL, _IONBF, 0); /* Desativar buffer do STDOUT */
 
 	do {
-		limparEcra();
-		
-		printf("-------------------------\n");
-		printf("- SERIAL PORT RCOM 1415 -\n");
-		printf("-------------------------\n");
-		printf("- 1. Run   			    -\n");
-		printf("- 2. Exit               -\n");
-		printf("-------------------------\n");
-		
-		int choice;
-		scanf("%d", &choice);
+
+		int choice = InitialMenu();
 
 		switch (choice) {
 		case 1:
@@ -61,17 +53,18 @@ int main(int argc, char** argv) {
 				prepareReceiver();
 
 			llclose(structDados.fd);
-			return 0;
+			break;
 		case 2:
-			return 2;
+			printf("Exiting program! \n");
+			break;
 		default:
 			continue;
 		}
+
 	} while (TRUE);
 
 	return 0;
 }
-
 
 /*
  * Prepare the port to send the packages
@@ -83,9 +76,8 @@ void prepareSender() {
 		fseek(structDados.fp, 0, SEEK_END);
 		structDados.filesize = ftell(structDados.fp);
 		rewind(structDados.fp);
-	}
-	else {
-		printf("FILE WAS NOT FOUND. ARE YOU SURE THIS FILE EXISTS?\n");
+	} else {
+		printf("File not found!\n");
 		exit(-1);
 	}
 
@@ -93,7 +85,6 @@ void prepareSender() {
 
 	llwrite();
 }
-
 
 /*
  * Prepare the port to receive the packages
@@ -106,7 +97,6 @@ void prepareReceiver() {
 	llread(structDados.fd, buf);
 }
 
-
 /*
  * Get the information about the transmission
  */
@@ -114,85 +104,61 @@ void startstruct() {
 	int choicePort = -1;
 
 	do {
-		limparEcra();
-		printf("# Are you a sender or a receiver?\n");
-		printf("#     1. Sender\n");
-		printf("#     2. Receiver\n");
-		char choice = getchar();
-		if (choice == '1'){
+
+		char choice = SenderOrReceiver();
+
+		if (choice == '1') {
 			structDados.sender = TRUE;
 			break;
-		}
-		else if (choice == '2'){
-			printf("Entrou rcev\n");
+		} else if (choice == '2') {
 			structDados.sender = FALSE;
 			break;
-		}
-		else continue;
+		} else
+			continue;
+
 	} while (TRUE);
 
-
 	if (structDados.sender) {
-		limparEcra();
-		printf("### What's the name of the file you want to send?\n");
-		getchar();
-		gets(structDados.fileName);
+		structDados.fileName = getFileName();
 	}
 
-	limparEcra();
-	printf("# Which port will you use?\n");
-	scanf("%d", &choicePort);
-	snprintf(structDados.port, sizeof(structDados.port), "/dev/ttyS%d", choicePort);
+	int port = getPort();
+	snprintf(structDados.port, sizeof(structDados.port), "/dev/ttyS%d", port);
 
 	do {
-		limparEcra();
-		printf("# Which BAUDRATE do you prefer?\n");
-		printf("#     1. B9600\n");
-		printf("#     2. B19200\n");
-		printf("#     3. B38400\n");
-		printf("#     4. B57600\n");
-		printf("#     5. B115200\n");
-		int choice = scanf("%d", &choice);
+
+		int choice = getBaudRate();
+
 		if (choice == 1) {
 			structDados.baudRate = B9600;
 			break;
-		}
-		else if (choice == 2) {
+		} else if (choice == 2) {
 			structDados.baudRate = B19200;
 			break;
-		}
-		else if (choice == 3) {
+		} else if (choice == 3) {
 			structDados.baudRate = B38400;
 			break;
-		}
-		else if (choice == 4) {
+		} else if (choice == 4) {
 			structDados.baudRate = B57600;
 			break;
-		}
-		else if (choice == 5) {
+		} else if (choice == 5) {
 			structDados.baudRate = B115200;
 			break;
-		}
-		else continue;
+		} else
+			continue;
+
 	} while (TRUE);
 
-	limparEcra();
-	printf("# How will your timeout be?\n");
-	scanf("%d", &structDados.timeout);
+	structDados.timeout = getTimeOut();
 
-	limparEcra();
-	printf("# How many times will your program try to send a package?\n");
-	scanf("%d", &structDados.numTransmissions);
+	structDados.numTransmissions = getMaxTrans();
 
 	if (structDados.sender) {
-		limparEcra();
-		printf("### How many data bytes should each frame contain?\n");
-		scanf("%d", &structDados.maxSize);
+		structDados.maxSize = getMaxPackages();
 		structDados.maxSize += 4;
-	}
-	else structDados.maxSize = 255;
+	} else
+		structDados.maxSize = 255;
 }
-
 
 /*
  * Open serial port device for reading 
@@ -201,9 +167,12 @@ int llopen() {
 	struct termios newtio;
 
 	/* Open serial port device for reading and writing and not as controlling tty
-	because we don't want to get killed if linenoise sends CTRL-C. */
+	 because we don't want to get killed if linenoise sends CTRL-C. */
 	int fd = open(structDados.port, O_RDWR | O_NOCTTY);
-	if (fd < 0) { perror(structDados.port); exit(-1); }
+	if (fd < 0) {
+		perror(structDados.port);
+		exit(-1);
+	}
 
 	if (tcgetattr(fd, &oldtio) == -1) { // save current port settings
 		perror("tcgetattr");
@@ -222,7 +191,7 @@ int llopen() {
 	newtio.c_cc[VMIN] = 0; // blocking read until x chars received
 
 	/* VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
-	leitura do(s) próximo(s) caracter(es) */
+	 leitura do(s) próximo(s) caracter(es) */
 
 	tcflush(fd, TCIOFLUSH);
 
@@ -240,7 +209,6 @@ int llopen() {
 
 	return fd;
 }
-
 
 /*
  * Function that send the SET-TRAMA
@@ -263,7 +231,8 @@ void sendSET(int fd) {
 			alarm(structDados.timeout);
 			int res = write(fd, SET, 5);
 
-			if (res == 5) printf("Frame sent successfully\n");
+			if (res == 5)
+				printf("Frame sent successfully\n");
 			else {
 				printf("Frame wasn't sent successfully\n");
 				podeEnviar = TRUE;
@@ -285,21 +254,19 @@ void sendSET(int fd) {
 						estado = 1;
 						printf("UA: Switching to state 1\n");
 						buf[0] = c;
-					}
-					else printf("UA: Remaining on state 0\n");
+					} else
+						printf("UA: Remaining on state 0\n");
 					break;
 				case 1:
 					if (c == A) {
 						estado = 2;
 						printf("UA: Switching to state 2\n");
 						buf[1] = c;
-					}
-					else if (c == FLAG) {
+					} else if (c == FLAG) {
 						estado = 1;
 						printf("UA: Remaining on state 1\n");
 						buf[0] = c;
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("UA: Switching to state 0\n");
 					}
@@ -309,13 +276,11 @@ void sendSET(int fd) {
 						estado = 3;
 						printf("UA: Switching to state 3\n");
 						buf[2] = c;
-					}
-					else if (c == FLAG) {
+					} else if (c == FLAG) {
 						estado = 1;
 						printf("UA: Switching to state 1\n");
 						buf[0] = c;
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("UA: Switching to state 0\n");
 					}
@@ -325,13 +290,11 @@ void sendSET(int fd) {
 						estado = 4;
 						printf("UA: Switching to state 4\n");
 						buf[3] = c;
-					}
-					else if (c == FLAG) {
+					} else if (c == FLAG) {
 						estado = 1;
 						printf("UA: Switching to state 1\n");
 						buf[0] = c;
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("UA: Switching to state 0\n");
 					}
@@ -343,8 +306,7 @@ void sendSET(int fd) {
 						printf("UA: Switching to state 5\n");
 						buf[4] = c;
 						passed = TRUE;
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("UA: Switching to state 0\n");
 					}
@@ -354,9 +316,9 @@ void sendSET(int fd) {
 			//sleep(1);
 		}
 	}
-	if (tentativaEnvio > structDados.numTransmissions) exit(-1);
+	if (tentativaEnvio > structDados.numTransmissions)
+		exit(-1);
 }
-
 
 /*
  * Function that send the UA response
@@ -381,21 +343,19 @@ void sendUA(int fd) {
 				estado = 1;
 				printf("SET: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else printf("SET: Remaining on state 0\n");
+			} else
+				printf("SET: Remaining on state 0\n");
 			break;
 		case 1:
 			if (c == A) {
 				estado = 2;
 				printf("SET: Switching to state 2\n");
 				buf[1] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("SET: Remaining on state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("SET: Switching to state 0\n");
 			}
@@ -405,13 +365,11 @@ void sendUA(int fd) {
 				estado = 3;
 				printf("SET: Switching to state 3\n");
 				buf[2] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("SET: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("SET: Switching to state 0\n");
 			}
@@ -421,13 +379,11 @@ void sendUA(int fd) {
 				estado = 4;
 				printf("SET: Switching to state 4\n");
 				buf[3] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("SET: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("SET: Switching to state 0\n");
 			}
@@ -437,8 +393,7 @@ void sendUA(int fd) {
 				estado = 5;
 				printf("SET: Switching to state 5\n");
 				buf[4] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("SET: Switching to state 0\n");
 			}
@@ -449,19 +404,15 @@ void sendUA(int fd) {
 	write(fd, UA, 5);
 }
 
-
-
 /*
  *	
  */
-void atendeAlarme()  {
+void atendeAlarme() {
 	printf("Bad response #%d from receiver!\n", tentativaEnvio);
 	tentativaEnvio++;
 	podeEnviar = TRUE;
 	estado = 0;
 }
-
-
 
 /*
  *	
@@ -474,8 +425,8 @@ int llwrite() {
 	CTRL_START[i++] = 0x01; // Indica início 
 	CTRL_START[i++] = 0x00; // A enviar tamanho do ficheiro
 	CTRL_START[i++] = 0x02; // 2 bytes
-	CTRL_START[i++] = (unsigned char)((structDados.filesize & 0xff00) >> 8); // Tamanho do ficheiro
-	CTRL_START[i++] = (unsigned char)(structDados.filesize & 0xff);
+	CTRL_START[i++] = (unsigned char) ((structDados.filesize & 0xff00) >> 8); // Tamanho do ficheiro
+	CTRL_START[i++] = (unsigned char) (structDados.filesize & 0xff);
 	CTRL_START[i++] = 0x01; // A enviar nome do ficheiro
 	CTRL_START[i++] = strlen(structDados.fileName) + 1; // strlen(structDados.fileName) + 1 bytes
 	int j;
@@ -487,7 +438,8 @@ int llwrite() {
 	CTRL_START[i++] = (structDados.maxSize >> 8) & 0xff;
 	CTRL_START[i++] = structDados.maxSize & 0xff;
 
-	if (linkwrite(CTRL_START, 11 + strlen(structDados.fileName) + 1, Ns) < 0) return -1;
+	if (linkwrite(CTRL_START, 11 + strlen(structDados.fileName) + 1, Ns) < 0)
+		return -1;
 	Ns = (Ns + 1) % 2;
 
 	int resRead;
@@ -498,25 +450,26 @@ int llwrite() {
 		unsigned char DATA_PACK[structDados.maxSize];
 		DATA_PACK[0] = 0x00; // Indica dados //
 		DATA_PACK[1] = numPack++ % 256; // Número de sequência
-		resRead = fread(DATA_PACK + 4, sizeof(unsigned char), structDados.maxSize - 4, structDados.fp);
+		resRead = fread(DATA_PACK + 4, sizeof(unsigned char),
+				structDados.maxSize - 4, structDados.fp);
 		DATA_PACK[2] = (resRead >> 8) & 0xff;
 		DATA_PACK[3] = resRead & 0xff;
 
-		if (linkwrite(DATA_PACK, 4 + resRead, Ns) < 0) return -1;
+		if (linkwrite(DATA_PACK, 4 + resRead, Ns) < 0)
+			return -1;
 		Ns = (Ns + 1) % 2;
 	} while (resRead);
 
 	unsigned char CTRL_STOP[1];
 	CTRL_STOP[0] = 0x02; // Indica paragem //
-	if (linkwrite(CTRL_STOP, 1, Ns) < 0) return -1;
+	if (linkwrite(CTRL_STOP, 1, Ns) < 0)
+		return -1;
 	Ns = (Ns + 1) % 2;
 
 	fclose(structDados.fp);
 
 	return numWritten; // Número de bytes escritos
 }
-
-
 
 /*
  *	
@@ -537,26 +490,30 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 	for (i = 0; i < datasize; i++) {
 		FRAME_I[4 + i] = data[i];
 		BCC2 ^= data[i];
-		if (FRAME_I[4 + i] == 0x7e || FRAME_I[4 + i] == 0x7d) aSubstituir++;
+		if (FRAME_I[4 + i] == 0x7e || FRAME_I[4 + i] == 0x7d)
+			aSubstituir++;
 	}
 	FRAME_I[4 + datasize] = BCC2;
-	if (FRAME_I[4 + datasize] == 0x7e || FRAME_I[4 + datasize] == 0x7d) aSubstituir++;
+	if (FRAME_I[4 + datasize] == 0x7e || FRAME_I[4 + datasize] == 0x7d)
+		aSubstituir++;
 	FRAME_I[5 + datasize] = FLAG;
 
 	unsigned char FRAME_I_FINAL[6 + datasize + aSubstituir];
 	int j;
 	for (i = 0, j = 0; i < 6 + datasize + aSubstituir; i++, j++) {
-		if (j < 4 || j == 6 + datasize - 1) FRAME_I_FINAL[i] = FRAME_I[j];
+		if (j < 4 || j == 6 + datasize - 1)
+			FRAME_I_FINAL[i] = FRAME_I[j];
 		else if (FRAME_I[j] == 0x7e || FRAME_I[j] == 0x7d) {
 			FRAME_I_FINAL[i++] = 0x7d;
 			FRAME_I_FINAL[i] = 0x20 ^ FRAME_I[j];
-		}
-		else FRAME_I_FINAL[i] = FRAME_I[j];
+		} else
+			FRAME_I_FINAL[i] = FRAME_I[j];
 	}
 
 	int OK = FALSE; // Recebeu RR corretamente?
 	while (tentativaEnvio <= structDados.numTransmissions) {
-		if (OK) break;
+		if (OK)
+			break;
 		else if (podeEnviar) {
 			printf("Sending frame: ");
 			for (i = 0; i < 6 + datasize + aSubstituir; i++)
@@ -579,15 +536,14 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 				if (c == FLAG) {
 					estado = 1;
 					printf("Confirmation: Switching to state 1\n");
-				}
-				else printf("Confirmation: Remaining on state 0\n");
+				} else
+					printf("Confirmation: Remaining on state 0\n");
 				break;
 			case 1:
 				if (c == A) {
 					estado = 2;
 					printf("Confirmation: Switching to state 2\n");
-				}
-				else if (c == FLAG)
+				} else if (c == FLAG)
 					printf("Confirmation: Remaining on state 1\n");
 				else {
 					estado = 0;
@@ -598,17 +554,14 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 				if (c == (Ns == 0 ? 0x21 : 0x01)) { //
 					estado = 3;
 					printf("Confirmation: positive. Switching to state 3\n");
-				}
-				else if (c == 0x05 || c == 0x25) { //
+				} else if (c == 0x05 || c == 0x25) { //
 					podeEnviar = TRUE;
 					estado = 0;
 					printf("Confirmation: negative. Resending...\n");
-				}
-				else if (c == FLAG) {
+				} else if (c == FLAG) {
 					estado = 1;
 					printf("Confirmation: Switching to state 1\n");
-				}
-				else {
+				} else {
 					estado = 0;
 					printf("Confirmation: Switching 2 state 0\n");
 				}
@@ -617,12 +570,10 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 				if (c == (A ^ (Ns == 0 ? 0x21 : 0x01))) { //
 					estado = 4;
 					printf("Confirmation: Switching to state 4\n");
-				}
-				else if (c == FLAG) {
+				} else if (c == FLAG) {
 					estado = 1;
 					printf("Confirmation: Switching to state 1\n");
-				}
-				else {
+				} else {
 					estado = 0;
 					printf("Confirmation: Switching to state 0\n");
 				}
@@ -632,8 +583,7 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 					estado = 5;
 					printf("Confirmation: Switching to state 5\n");
 					OK = TRUE; // Sair do ciclo
-				}
-				else {
+				} else {
 					estado = 0;
 					printf("Confirmation: Switching to state 0\n");
 				}
@@ -644,8 +594,6 @@ int linkwrite(unsigned char* data, int datasize, int Ns) {
 
 	return tentativaEnvio <= structDados.numTransmissions ? 0 : -1;
 }
-
-
 
 /*
  *	
@@ -673,22 +621,27 @@ int llread() {
 			REJ[3] = REJ[1] ^ REJ[2];
 			tcflush(structDados.fd, TCIFLUSH);
 			write(structDados.fd, REJ, 5);
-		}
-		else if (dataPackage[0] == 0x00) { //
+		} else if (dataPackage[0] == 0x00) { //
 			int posPackage = 0;
-			if (duplicate) printf("Duplicate frame!\n");
+			if (duplicate)
+				printf("Duplicate frame!\n");
+
 			while (posPackage < packageSize && !duplicate) {
-				fwrite(dataPackage + 4 + posPackage, sizeof(unsigned char), 1, structDados.fp);
+				fwrite(dataPackage + 4 + posPackage, sizeof(unsigned char), 1,
+						structDados.fp);
 				posPackage++;
 				numread++;
 			}
-			if (!duplicate) Nr = (Nr + 1) % 2;
+
+			if (!duplicate)
+				Nr = (Nr + 1) % 2;
+
 			duplicate = FALSE;
-			RR[2] = (Nr == 0) ? 0x01 : 0x21;//
+			RR[2] = (Nr == 0) ? 0x01 : 0x21; //
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados.fd, RR, 5);
-		}
-		else if (dataPackage[0] == 0x01) { //
+
+		} else if (dataPackage[0] == 0x01) { //
 			unsigned int i = 1;
 			unsigned int j;
 
@@ -714,21 +667,24 @@ int llread() {
 			}
 
 			Nr = (Nr + 1) % 2;
-			RR[2] = (Nr == 0) ? 0x01 : 0x21;//
+			RR[2] = (Nr == 0) ? 0x01 : 0x21; //
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados.fd, RR, 5);
-		}
-		else if (dataPackage[0] == 0x02) { //
+
+		} else if (dataPackage[0] == 0x02) { //
+
 			Nr = (Nr + 1) % 2;
-			RR[2] = (Nr == 0) ? 0x01 : 0x21;//
+			RR[2] = (Nr == 0) ? 0x01 : 0x21; //
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados.fd, RR, 5);
 			break;
+
 		}
+
 	} while (TRUE);
 
 	fclose(structDados.fp);
-	
+
 	FILE* filetest = fopen(structDados.fileName, "rb");
 	fseek(filetest, 0, SEEK_END);
 	if ((structDados.filesize = ftell(structDados.fp)))
@@ -738,7 +694,6 @@ int llread() {
 
 	return numread;
 }
-
 
 /*
  *	
@@ -783,8 +738,7 @@ int linkread(unsigned char* dataPackage) {
 			else
 				wasREJsent = TRUE;
 			break;
-		case 4:
-		{
+		case 4: {
 			int megaEstado = 0;
 			if (c == 0x00) {
 				bcc2 ^= c;
@@ -799,7 +753,7 @@ int linkread(unsigned char* dataPackage) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c; // N
 				printf("N = %d\n", c);
-				N = c+20;
+				N = c + 20;
 
 				read(structDados.fd, &c, 1);
 				if (c == 0x7d) {
@@ -828,8 +782,7 @@ int linkread(unsigned char* dataPackage) {
 					i--;
 				}
 				estado = 5;
-			}
-			else if (c == 0x01) {
+			} else if (c == 0x01) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 
@@ -912,13 +865,11 @@ int linkread(unsigned char* dataPackage) {
 				}
 
 				estado = 5;
-			}
-			else if (c == 0x02) {
+			} else if (c == 0x02) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 				estado = 5;
-			}
-			else
+			} else
 				wasREJsent = TRUE;
 			break;
 		}
@@ -931,8 +882,7 @@ int linkread(unsigned char* dataPackage) {
 					estado = 6;
 				else
 					wasREJsent = TRUE;
-			}
-			else if (c == bcc2)
+			} else if (c == bcc2)
 				estado = 6;
 			else
 				wasREJsent = TRUE;
@@ -947,16 +897,17 @@ int linkread(unsigned char* dataPackage) {
 	}
 
 	printf("WasRejSent: %d (bcc2 = %d)\n", wasREJsent, bcc2);
-	if (wasREJsent) return -1;
+	if (wasREJsent)
+		return -1;
 
 	if (Controlo == 0x00) { // Se foi pacote de dados...
-		if (N == lastN) duplicate = TRUE;
-		lastN = N; 
+		if (N == lastN)
+			duplicate = TRUE;
+		lastN = N;
 	}
 
 	return packagesLength;
 }
-
 
 /*
  *	
@@ -988,7 +939,6 @@ int llclose() {
 	return 0;
 }
 
-
 /*
  *	Function that clear all the screen
  */
@@ -997,7 +947,6 @@ void limparEcra() {
 	for (i = 0; i < 50; i++)
 		printf("\n");
 }
-
 
 /*
  *	
@@ -1016,7 +965,8 @@ void senderDISC(unsigned char* DISC) {
 			alarm(structDados.timeout);
 			int res = write(structDados.fd, DISC, 5);
 
-			if (res == 5) printf("Sent DISC\n");
+			if (res == 5)
+				printf("Sent DISC\n");
 			else {
 				printf("Unable to send DISC\n");
 				podeEnviar = TRUE;
@@ -1038,21 +988,19 @@ void senderDISC(unsigned char* DISC) {
 						estado = 1;
 						printf("DISC: Switching to state 1\n");
 						buf[0] = c;
-					}
-					else printf("DISC: Remaining on state 0\n");
+					} else
+						printf("DISC: Remaining on state 0\n");
 					break;
 				case 1:
 					if (c == A) {
 						estado = 2;
 						printf("DISC: Switching to state 2\n");
 						buf[1] = c;
-					}
-					else if (c == FLAG) {
+					} else if (c == FLAG) {
 						estado = 1;
 						printf("DISC: Remaining on state 1\n");
 						buf[0] = c;
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("DISC: Switching to state 0\n");
 					}
@@ -1062,13 +1010,11 @@ void senderDISC(unsigned char* DISC) {
 						estado = 3;
 						printf("DISC: Switching to state 3\n");
 						buf[2] = c;
-					}
-					else if (c == FLAG) {
+					} else if (c == FLAG) {
 						estado = 1;
 						printf("DISC: Switching to state 1\n");
 						buf[0] = c;
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("DISC: Switching to state 0\n");
 					}
@@ -1078,13 +1024,11 @@ void senderDISC(unsigned char* DISC) {
 						estado = 4;
 						printf("DISC: Switching to state 4\n");
 						buf[3] = c;
-					}
-					else if (c == FLAG) {
+					} else if (c == FLAG) {
 						estado = 1;
 						printf("DISC: Switching to state 1\n");
 						buf[0] = c;
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("DISC: Switching to state 0\n");
 					}
@@ -1096,8 +1040,7 @@ void senderDISC(unsigned char* DISC) {
 						printf("DISC: Switching to state 5\n");
 						buf[4] = c;
 						tentativaEnvio = structDados.numTransmissions + 1; // Obrigar a sair do ciclo
-					}
-					else {
+					} else {
 						estado = 0;
 						printf("DISC: Switching to state 0\n");
 					}
@@ -1118,7 +1061,6 @@ void senderDISC(unsigned char* DISC) {
 	sleep(1);
 }
 
-
 /*
  *	
  */
@@ -1135,8 +1077,8 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 1;
 				printf("DISC: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else printf("DISC: Remaining on state 0\n");
+			} else
+				printf("DISC: Remaining on state 0\n");
 			break;
 		case 1:
 			if (c == A) {
@@ -1144,13 +1086,11 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 2;
 				printf("DISC: Switching to state 2\n");
 				buf[1] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("DISC: Remaining on state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("DISC: Switching to state 0\n");
 			}
@@ -1160,13 +1100,11 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 3;
 				printf("DISC: Switching to state 3\n");
 				buf[2] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("DISC: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("DISC: Switching to state 0\n");
 			}
@@ -1176,13 +1114,11 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 4;
 				printf("DISC: Switching to state 4\n");
 				buf[3] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("  DISC: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("DISC: Switching to state 0\n");
 			}
@@ -1192,8 +1128,7 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 5;
 				printf("DISC: Switching to state 5\n");
 				buf[4] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("DISC: Switching to state 0\n");
 			}
@@ -1214,8 +1149,8 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 1;
 				printf("UA: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else printf("UA: Remaining on state 0\n");
+			} else
+				printf("UA: Remaining on state 0\n");
 			break;
 		case 1:
 			if (c == A) {
@@ -1223,13 +1158,11 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 2;
 				printf("UA: Switching to state 2\n");
 				buf[1] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("UA: Remaining on state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("UA: Switching to state 0\n");
 			}
@@ -1239,13 +1172,11 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 3;
 				printf("UA: Switching to state 3\n");
 				buf[2] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("UA: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("UA: Switching to state 0\n");
 			}
@@ -1255,13 +1186,11 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 4;
 				printf("UA: Switching to state 4\n");
 				buf[3] = c;
-			}
-			else if (c == FLAG) {
+			} else if (c == FLAG) {
 				estado = 1;
 				printf("UA: Switching to state 1\n");
 				buf[0] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("UA: Switching to state 0\n");
 			}
@@ -1271,8 +1200,7 @@ void receiverDISC(unsigned char* DISC) {
 				estado = 5;
 				printf("UA: Switching to state 5\n");
 				buf[4] = c;
-			}
-			else {
+			} else {
 				estado = 0;
 				printf("UA: Switching to state 0\n");
 			}
