@@ -31,6 +31,16 @@ unsigned char lastN = 255;
 int duplicate = FALSE;
 
 /*
+ *	Function that clear all the screen
+ */
+void limparEcra() {
+	unsigned int i;
+	for (i = 0; i < 50; i++)
+		printf("\n");
+}
+
+
+/*
  * The main function that runs all the program
  */
 int main(int argc, char** argv) {
@@ -39,8 +49,23 @@ int main(int argc, char** argv) {
 	setvbuf(stdout, NULL, _IONBF, 0); /* Desativar buffer do STDOUT */
 
 	do {
+<<<<<<< HEAD
 
 		int choice = InitialMenu();
+=======
+		
+		limparEcra();
+		
+		printf("-------------------------\n");
+		printf("- SERIAL PORT RCOM 1415 -\n");
+		printf("-------------------------\n");
+		printf("- 1. Run   			    -\n");
+		printf("- 2. Exit               -\n");
+		printf("-------------------------\n");
+		
+		int choice;
+		scanf("%d", &choice);
+>>>>>>> origin/master
 
 		switch (choice) {
 		case 1:
@@ -223,6 +248,7 @@ void sendSET(int fd) {
 
 	unsigned char c;
 	unsigned char buf[5];
+	(void) buf;
 	int passed = FALSE;
 
 	while (tentativaEnvio <= structDados.numTransmissions && passed == FALSE) {
@@ -333,6 +359,7 @@ void sendUA(int fd) {
 
 	unsigned char c;
 	unsigned char buf[5];
+	(void) buf;
 
 	while (estado != 5) {
 		read(fd, &c, 1);
@@ -940,6 +967,7 @@ int llclose() {
 }
 
 /*
+<<<<<<< HEAD
  *	Function that clear all the screen
  */
 void limparEcra() {
@@ -949,6 +977,8 @@ void limparEcra() {
 }
 
 /*
+=======
+>>>>>>> origin/master
  *	
  */
 void senderDISC(unsigned char* DISC) {
@@ -958,6 +988,7 @@ void senderDISC(unsigned char* DISC) {
 
 	unsigned char c;
 	unsigned char buf[5];
+	(void) buf;
 
 	while (tentativaEnvio <= structDados.numTransmissions) {
 		if (podeEnviar) {
@@ -1067,6 +1098,7 @@ void senderDISC(unsigned char* DISC) {
 void receiverDISC(unsigned char* DISC) {
 	unsigned char c;
 	unsigned char buf[5];
+	(void) buf;
 
 	while (estado != 5) {
 		read(structDados.fd, &c, 1);
