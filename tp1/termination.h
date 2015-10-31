@@ -9,8 +9,8 @@
 #define FLAG 0x7e
 #define A 0x03
 
-extern void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
-extern void receiverDISC(unsigned char* DISC, Settings structDados, volatile int estado);
+extern void senderDISC(unsigned char* DISC, Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
+extern void receiverDISC(unsigned char* DISC, Settings* structDados, volatile int estado);
 
 
 #endif

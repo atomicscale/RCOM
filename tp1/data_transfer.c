@@ -19,7 +19,7 @@ unsigned char lastN = 255;
 /*
  *	
  */
-int linkwrite(unsigned char* data, Settings structDados, int datasize, int Ns, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
+int linkwrite(unsigned char* data, Settings* structDados, int datasize, int Ns, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	tentativaEnvio = 1;
 	podeEnviar = TRUE;
 	estado = 0;
@@ -53,21 +53,21 @@ int linkwrite(unsigned char* data, Settings structDados, int datasize, int Ns, v
 	}
 
 	int OK = FALSE; // Recebeu RR corretamente?
-	while (tentativaEnvio <= structDados.numTransmissions) {
+	while (tentativaEnvio <= structDados->numTransmissions) {
 		if (OK) break;
 		else if (podeEnviar) {
 			printf("Sending frame: ");
 			for (i = 0; i < 6 + datasize + aSubstituir; i++)
 				printf("%d ", FRAME_I_FINAL[i]);
 			printf("\n");
-			tcflush(structDados.fd, TCIFLUSH);
-			write(structDados.fd, FRAME_I_FINAL, 6 + datasize + aSubstituir);
-			alarm(structDados.timeout);
+			tcflush(structDados->fd, TCIFLUSH);
+			write(structDados->fd, FRAME_I_FINAL, 6 + datasize + aSubstituir);
+			alarm(structDados->timeout);
 			podeEnviar = FALSE;
 		}
 
 		unsigned char c;
-		int res = read(structDados.fd, &c, 1);
+		int res = read(structDados->fd, &c, 1);
 
 		if (res != 0) {
 			alarm(0);
@@ -140,7 +140,7 @@ int linkwrite(unsigned char* data, Settings structDados, int datasize, int Ns, v
 		}
 	}
 
-	return tentativaEnvio <= structDados.numTransmissions ? 0 : -1;
+	return tentativaEnvio <= structDados->numTransmissions ? 0 : -1;
 }
 
 
@@ -148,9 +148,10 @@ int linkwrite(unsigned char* data, Settings structDados, int datasize, int Ns, v
 /*
  *	
  */
-int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
+int linkread(unsigned char* dataPackage, Settings* structDados, int duplicate) {
+	
 	unsigned char c;
-	unsigned char buf[structDados.maxSize + 6];
+	unsigned char buf[structDados->maxSize + 6];
 	int estado = 0;
 	unsigned char bcc2 = 0x00;
 	int packagesLength = 0;
@@ -161,7 +162,7 @@ int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
 	int wasREJsent = FALSE;
 
 	while (estado != 7 && wasREJsent == FALSE) {
-		read(structDados.fd, &c, 1);
+		read(structDados->fd, &c, 1);
 
 		switch (estado) {
 		case 0:
@@ -196,9 +197,9 @@ int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
 				dataPackage[megaEstado++] = c; // C
 				Controlo = c;
 
-				read(structDados.fd, &c, 1);
+				read(structDados->fd, &c, 1);
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
@@ -206,16 +207,16 @@ int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
 				printf("N = %d\n", c);
 				N = c + 1;
 
-				read(structDados.fd, &c, 1);
+				read(structDados->fd, &c, 1);
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c; // L2      
-				read(structDados.fd, &c, 1);
+				read(structDados->fd, &c, 1);
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
@@ -223,9 +224,9 @@ int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
 				packagesLength = 256 * dataPackage[2] + dataPackage[3];
 				i = packagesLength;
 				while (i > 0) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					if (c == 0x7d) {
-						read(structDados.fd, &c, 1);
+						read(structDados->fd, &c, 1);
 						c ^= 0x20;
 					}
 					bcc2 ^= c;
@@ -238,78 +239,78 @@ int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 
-				read(structDados.fd, &c, 1); // T1
+				read(structDados->fd, &c, 1); // T1
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 
-				read(structDados.fd, &c, 1); // L1
+				read(structDados->fd, &c, 1); // L1
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
 				dataPackage[megaEstado] = c;
 
 				for (i = dataPackage[megaEstado++]; i > 0; i--) {
-					read(structDados.fd, &c, 1); // V1
+					read(structDados->fd, &c, 1); // V1
 					if (c == 0x7d) {
-						read(structDados.fd, &c, 1);
+						read(structDados->fd, &c, 1);
 						c ^= 0x20;
 					}
 					bcc2 ^= c;
 					dataPackage[megaEstado++] = c;
 				}
 
-				read(structDados.fd, &c, 1); // T2
+				read(structDados->fd, &c, 1); // T2
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 
-				read(structDados.fd, &c, 1); // L2
+				read(structDados->fd, &c, 1); // L2
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
 				dataPackage[megaEstado] = c;
 
 				for (i = dataPackage[megaEstado++]; i > 0; i--) {
-					read(structDados.fd, &c, 1); // V2
+					read(structDados->fd, &c, 1); // V2
 					if (c == 0x7d) {
-						read(structDados.fd, &c, 1);
+						read(structDados->fd, &c, 1);
 						c ^= 0x20;
 					}
 					bcc2 ^= c;
 					dataPackage[megaEstado++] = c;
 				}
 
-				read(structDados.fd, &c, 1); // T3
+				read(structDados->fd, &c, 1); // T3
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 
-				read(structDados.fd, &c, 1); // L3
+				read(structDados->fd, &c, 1); // L3
 				if (c == 0x7d) {
-					read(structDados.fd, &c, 1);
+					read(structDados->fd, &c, 1);
 					c ^= 0x20;
 				}
 				bcc2 ^= c;
 				dataPackage[megaEstado] = c;
 
 				for (i = dataPackage[megaEstado++]; i > 0; i--) {
-					read(structDados.fd, &c, 1); // V3
+					read(structDados->fd, &c, 1); // V3
 					if (c == 0x7d) {
-						read(structDados.fd, &c, 1);
+						read(structDados->fd, &c, 1);
 						c ^= 0x20;
 					}
 					bcc2 ^= c;
@@ -330,7 +331,7 @@ int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
 		case 5:
 			printf("bcc2 esperado: %d, obtido: %d\n", bcc2, c);
 			if (c == 0x7d) {
-				read(structDados.fd, &c, 1);
+				read(structDados->fd, &c, 1);
 				c ^= 0x20;
 				if (c == bcc2)
 					estado = 6;

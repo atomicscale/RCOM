@@ -17,7 +17,7 @@
 /*
  *	
  */
-void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
+void senderDISC(unsigned char* DISC, Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	tentativaEnvio = 1;
 	podeEnviar = TRUE;
 	estado = 0;
@@ -26,11 +26,11 @@ void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, 
 	unsigned char buf[5];
 	(void) buf;
 
-	while (tentativaEnvio <= structDados.numTransmissions) {
+	while (tentativaEnvio <= structDados->numTransmissions) {
 		if (podeEnviar) {
 			podeEnviar = FALSE;
-			alarm(structDados.timeout);
-			int res = write(structDados.fd, DISC, 5);
+			alarm(structDados->timeout);
+			int res = write(structDados->fd, DISC, 5);
 
 			if (res == 5) printf("Sent DISC\n");
 			else {
@@ -38,7 +38,7 @@ void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, 
 				podeEnviar = TRUE;
 			}
 
-			alarm(structDados.timeout);
+			alarm(structDados->timeout);
 
 			while (estado != 5) {
 				if (podeEnviar) {
@@ -46,7 +46,7 @@ void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, 
 					break;
 				}
 
-				read(structDados.fd, &c, 1);
+				read(structDados->fd, &c, 1);
 
 				switch (estado) {
 				case 0:
@@ -111,7 +111,7 @@ void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, 
 						estado = 5;
 						printf("DISC: Switching to state 5\n");
 						buf[4] = c;
-						tentativaEnvio = structDados.numTransmissions + 1; // Obrigar a sair do ciclo
+						tentativaEnvio = structDados->numTransmissions + 1; // Obrigar a sair do ciclo
 					}
 					else {
 						estado = 0;
@@ -130,7 +130,7 @@ void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, 
 	UA[3] = A ^ 0x03; //
 	UA[4] = FLAG;
 
-	write(structDados.fd, UA, 5);
+	write(structDados->fd, UA, 5);
 	sleep(1);
 }
 
@@ -138,13 +138,13 @@ void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, 
 /*
  *	
  */
-void receiverDISC(unsigned char* DISC, Settings structDados, volatile int estado) {
+void receiverDISC(unsigned char* DISC, Settings* structDados, volatile int estado) {
 	unsigned char c;
 	unsigned char buf[5];
 	(void) buf;
 
 	while (estado != 5) {
-		read(structDados.fd, &c, 1);
+		read(structDados->fd, &c, 1);
 
 		switch (estado) {
 		case 0:
@@ -218,12 +218,12 @@ void receiverDISC(unsigned char* DISC, Settings structDados, volatile int estado
 		}
 	}
 
-	write(structDados.fd, DISC, 5);
+	write(structDados->fd, DISC, 5);
 
 	estado = 0;
 
 	while (estado != 5) {
-		read(structDados.fd, &c, 1);
+		read(structDados->fd, &c, 1);
 
 		switch (estado) {
 		case 0:

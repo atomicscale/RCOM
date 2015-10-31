@@ -16,7 +16,7 @@
 /*
  * Function that send the SET-TRAMA
  */
-void sendSET(int fd, Settings structDados, int estado, int tentativaEnvio, int podeEnviar) {
+void sendSET(int fd, Settings* structDados, int estado, int tentativaEnvio, int podeEnviar) {
 	unsigned char SET[5]; // Trama SET
 	SET[0] = FLAG;
 	SET[1] = A;
@@ -29,10 +29,10 @@ void sendSET(int fd, Settings structDados, int estado, int tentativaEnvio, int p
 	(void) buf;
 	int passed = FALSE;
 
-	while (tentativaEnvio <= structDados.numTransmissions && passed == FALSE) {
+	while (tentativaEnvio <= structDados->numTransmissions && passed == FALSE) {
 		if (podeEnviar) {
 			podeEnviar = FALSE;
-			alarm(structDados.timeout);
+			alarm(structDados->timeout);
 			int res = write(fd, SET, 5);
 
 			if (res == 5) printf("Frame sent successfully\n");
@@ -41,7 +41,7 @@ void sendSET(int fd, Settings structDados, int estado, int tentativaEnvio, int p
 				podeEnviar = TRUE;
 			}
 
-			alarm(structDados.timeout);
+			alarm(structDados->timeout);
 
 			while (estado != 5) {
 				if (podeEnviar) {
@@ -126,14 +126,14 @@ void sendSET(int fd, Settings structDados, int estado, int tentativaEnvio, int p
 			
 		}
 	}
-	if (tentativaEnvio > structDados.numTransmissions) exit(-1);
+	if (tentativaEnvio > structDados->numTransmissions) exit(-1);
 }
 
 
 /*
  * Function that send the UA response
  */
-void sendUA(int fd, Settings structDados, int estado) {
+void sendUA(int fd, Settings* structDados, int estado) {
 	unsigned char UA[5]; // Trama UA (unnumbered acknowledgement)
 	UA[0] = FLAG;
 	UA[1] = A;

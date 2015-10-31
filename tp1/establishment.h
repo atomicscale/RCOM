@@ -9,7 +9,7 @@
 #define FLAG 0x7e
 #define A 0x03
 
-extern void sendSET(int fd, Settings structDados, int estado, int tentativaEnvio, int podeEnviar);
-extern void sendUA(int fd, Settings structDados, int estado);
+extern void sendSET(int fd, Settings* structDados, int estado, int tentativaEnvio, int podeEnviar);
+extern void sendUA(int fd, Settings* structDados, int estado);
 
 #endif 

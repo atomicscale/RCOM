@@ -13,7 +13,7 @@
 #define FALSE 0
 #define TRUE 1
 
-static Settings structDados;
+static Settings* structDados = malloc(sizeof(struct Settings)); /* malloc */
 
 volatile int estado = 0, tentativaEnvio = 1, podeEnviar = TRUE;
 
@@ -27,6 +27,9 @@ void atendeAlarme()  {
 	estado = 0;
 }
 
+/*
+ *
+ */
 void limparEcra() {
 	unsigned int i;
 	for (i = 0; i < 50; i++)
@@ -41,10 +44,10 @@ void limparEcra() {
 void prepareSender() {
 	limparEcra();
 
-	if ((structDados.fp = fopen(structDados.fileName, "rb")) != NULL) {
-		fseek(structDados.fp, 0, SEEK_END);
-		structDados.filesize = ftell(structDados.fp);
-		rewind(structDados.fp);
+	if ((structDados->fp = fopen(structDados->fileName, "rb")) != NULL) {
+		fseek(structDados->fp, 0, SEEK_END);
+		structDados->filesize = ftell(structDados->fp);
+		rewind(structDados->fp);
 	}
 	else {
 		printf("File not found!\n");
@@ -83,27 +86,27 @@ void startstruct() {
 		char choice = getchar();
 		if (choice == '1'){
 
-			structDados.sender = TRUE;
+			structDados->sender = TRUE;
 			break;
 		}
 		else if (choice == '2'){
-			structDados.sender = FALSE;
+			structDados->sender = FALSE;
 			break;
 		}
 		else continue;
 	} while (TRUE);
 
 
-	if (structDados.sender) {
+	if (structDados->sender) {
 		limparEcra();
 		printf(". What's the name of the file you want to send?\n");
-		gets(structDados.fileName);
+		gets(structDados->fileName);
 	}
 
 	limparEcra();
 	printf(". Which port will you use?\n");
 	scanf("%d", &choicePort);
-	snprintf(structDados.port, sizeof(structDados.port), "/dev/ttyS%d", choicePort);
+	snprintf(structDados->port, sizeof(structDados->port), "/dev/ttyS%d", choicePort);
 
 	do {
 		limparEcra();
@@ -115,23 +118,23 @@ void startstruct() {
 		printf("     5. B115200\n");
 		int choice = scanf("%d", &choice);
 		if (choice == 1) {
-			structDados.baudRate = B9600;
+			structDados->baudRate = B9600;
 			break;
 		}
 		else if (choice == 2) {
-			structDados.baudRate = B19200;
+			structDados->baudRate = B19200;
 			break;
 		}
 		else if (choice == 3) {
-			structDados.baudRate = B38400;
+			structDados->baudRate = B38400;
 			break;
 		}
 		else if (choice == 4) {
-			structDados.baudRate = B57600;
+			structDados->baudRate = B57600;
 			break;
 		}
 		else if (choice == 5) {
-			structDados.baudRate = B115200;
+			structDados->baudRate = B115200;
 			break;
 		}
 		else continue;
@@ -139,19 +142,19 @@ void startstruct() {
 
 	limparEcra();
 	printf(". How will your timeout be?\n");
-	scanf("%d", &structDados.timeout);
+	scanf("%d", &structDados->timeout);
 
 	limparEcra();
 	printf(". How many times will your program try to send a package?\n");
-	scanf("%d", &structDados.numTransmissions);
+	scanf("%d", &structDados->numTransmissions);
 
 	if (structDados.sender) {
 		limparEcra();
 		printf(". How many data bytes should each frame contain?\n");
-		scanf("%d", &structDados.maxSize);
-		structDados.maxSize += 4;
+		scanf("%d", &structDados->maxSize);
+		structDados->maxSize += 4;
 	}
-	else structDados.maxSize = 255;
+	else structDados->maxSize = 255;
 }
 
 
@@ -177,9 +180,9 @@ int main(int argc, char** argv) {
 		switch (choice) {
 		case 1:
 			startstruct();
-			structDados.fd = llopen(structDados, estado, tentativaEnvio, podeEnviar);
+			structDados->fd = llopen(structDados, estado, tentativaEnvio, podeEnviar);
 
-			if (structDados.sender)
+			if (structDados->sender)
 				prepareSender();
 			else
 				prepareReceiver();
