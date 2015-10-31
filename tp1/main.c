@@ -35,57 +35,11 @@ void limparEcra() {
 
 
 
-int main(int argc, char** argv) {
-
-	signal(SIGALRM, atendeAlarme); /* Instalar alarme */
-	setvbuf(stdout, NULL, _IONBF, 0); /* Desativar buffer do STDOUT */
-
-	int n = 0;
-
-	do {
-
-		limparEcra();
-		
-		printf("-------------------------\n");
-		printf("- SERIAL PORT RCOM 1415 -\n");
-		printf("-------------------------\n");
-		printf("- 1. Run   			    -\n");
-		printf("- 2. Exit               -\n");
-		printf("-------------------------\n");
-		
-		int choice;
-		scanf("%d", &choice);
-
-		switch (choice) {
-		case 1:
-			startstruct();
-			structDados.fd = llopen(&structDados, estado, tentativaEnvio, podeEnviar);
-
-			if (structDados.sender)
-				prepareSender();
-			else
-				prepareReceiver();
-
-			n = llclose(&structDados, estado, tentativaEnvio, podeEnviar);
-			break;
-		case 2:
-			printf("Exiting program! \n");
-			break;
-		default:
-			continue;
-		}
-
-	} while (TRUE);
-
-	return 0;
-}
-
 /*
  * Prepare the port to send the packages
  */
 void prepareSender() {
 	limparEcra();
-	int n = 0;
 
 	if ((structDados.fp = fopen(structDados.fileName, "rb")) != NULL) {
 		fseek(structDados.fp, 0, SEEK_END);
@@ -99,7 +53,7 @@ void prepareSender() {
 
 	printf("Sending file...\n");
 
-	n = llwrite(&structDados, estado, tentativaEnvio, podeEnviar);
+	llwrite(structDados, estado, tentativaEnvio, podeEnviar);
 }
 
 /*
@@ -107,12 +61,11 @@ void prepareSender() {
  */
 void prepareReceiver() {
 	limparEcra();
-	int n = 0;
 
 	printf("Receiving file...\n");
 
 	//unsigned char* buf = NULL;
-	n = llread(&structDados);
+	llread(structDados);
 }
 
 /*
@@ -121,13 +74,15 @@ void prepareReceiver() {
 void startstruct() {
 	int choicePort = -1;
 
+
 	do {
 		limparEcra();
-		printf("-> Are you a sender or a receiver?\n");
+		printf(". Are you a sender or a receiver?\n");
 		printf("    1. Sender \n");
 		printf("    2. Receiver \n");
 		char choice = getchar();
 		if (choice == '1'){
+
 			structDados.sender = TRUE;
 			break;
 		}
@@ -141,18 +96,18 @@ void startstruct() {
 
 	if (structDados.sender) {
 		limparEcra();
-		printf("-> What's the name of the file you want to send?\n");
+		printf(". What's the name of the file you want to send?\n");
 		gets(structDados.fileName);
 	}
 
 	limparEcra();
-	printf("-> Which port will you use?\n");
+	printf(". Which port will you use?\n");
 	scanf("%d", &choicePort);
 	snprintf(structDados.port, sizeof(structDados.port), "/dev/ttyS%d", choicePort);
 
 	do {
 		limparEcra();
-		printf("-> Which BAUDRATE do you prefer?\n");
+		printf(". Which BAUDRATE do you prefer?\n");
 		printf("     1. B9600\n");
 		printf("     2. B19200\n");
 		printf("     3. B38400\n");
@@ -183,19 +138,62 @@ void startstruct() {
 	} while (TRUE);
 
 	limparEcra();
-	printf("-> How will your timeout be?\n");
+	printf(". How will your timeout be?\n");
 	scanf("%d", &structDados.timeout);
 
 	limparEcra();
-	printf("-> How many times will your program try to send a package?\n");
+	printf(". How many times will your program try to send a package?\n");
 	scanf("%d", &structDados.numTransmissions);
 
 	if (structDados.sender) {
 		limparEcra();
-		printf("-> How many data bytes should each frame contain?\n");
+		printf(". How many data bytes should each frame contain?\n");
 		scanf("%d", &structDados.maxSize);
 		structDados.maxSize += 4;
 	}
 	else structDados.maxSize = 255;
 }
 
+
+int main(int argc, char** argv) {
+
+	signal(SIGALRM, atendeAlarme); /* Instalar alarme */
+	setvbuf(stdout, NULL, _IONBF, 0); /* Desativar buffer do STDOUT */
+
+	do {
+
+		limparEcra();
+		
+		printf("-------------------------\n");
+		printf("- SERIAL PORT RCOM 1516 -\n");
+		printf("-------------------------\n");
+		printf("- 1. Run   			    -\n");
+		printf("- 2. Exit               -\n");
+		printf("-------------------------\n");
+		
+		int choice;
+		scanf("%d", &choice);
+
+		switch (choice) {
+		case 1:
+			startstruct();
+			structDados.fd = llopen(structDados, estado, tentativaEnvio, podeEnviar);
+
+			if (structDados.sender)
+				prepareSender();
+			else
+				prepareReceiver();
+
+			llclose(structDados, estado, tentativaEnvio, podeEnviar);
+			break;
+		case 2:
+			printf("Exiting program! \n");
+			break;
+		default:
+			continue;
+		}
+
+	} while (TRUE);
+
+	return 0;
+}

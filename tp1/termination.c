@@ -17,7 +17,7 @@
 /*
  *	
  */
-void senderDISC(unsigned char* DISC, Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
+void senderDISC(unsigned char* DISC, Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	tentativaEnvio = 1;
 	podeEnviar = TRUE;
 	estado = 0;
@@ -138,7 +138,7 @@ void senderDISC(unsigned char* DISC, Settings* structDados, volatile int estado,
 /*
  *	
  */
-void receiverDISC(unsigned char* DISC, Settings* structDados, volatile int estado) {
+void receiverDISC(unsigned char* DISC, Settings structDados, volatile int estado) {
 	unsigned char c;
 	unsigned char buf[5];
 	(void) buf;

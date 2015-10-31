@@ -29,9 +29,9 @@ typedef struct UserSettings {
     
 } Settings;
 
-extern int llopen(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
-extern int llwrite(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
-extern int llread(Settings* structDados);
-extern int llclose(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
+extern int llopen(Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
+extern int llwrite(Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
+extern int llread(Settings structDados);
+extern int llclose(Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
 
 #endif 

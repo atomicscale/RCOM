@@ -16,7 +16,7 @@
 /*
  * Function that send the SET-TRAMA
  */
-void sendSET(int fd, Settings* structDados, int estado, int tentativaEnvio, int podeEnviar) {
+void sendSET(int fd, Settings structDados, int estado, int tentativaEnvio, int podeEnviar) {
 	unsigned char SET[5]; // Trama SET
 	SET[0] = FLAG;
 	SET[1] = A;
@@ -133,7 +133,7 @@ void sendSET(int fd, Settings* structDados, int estado, int tentativaEnvio, int 
 /*
  * Function that send the UA response
  */
-void sendUA(int fd, Settings* structDados, , int estado) {
+void sendUA(int fd, Settings structDados, int estado) {
 	unsigned char UA[5]; // Trama UA (unnumbered acknowledgement)
 	UA[0] = FLAG;
 	UA[1] = A;

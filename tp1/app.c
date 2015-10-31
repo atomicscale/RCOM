@@ -23,7 +23,7 @@ int duplicate = FALSE;
 /*
  * Open serial port device for reading 
  */
-int llopen(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar); {
+int llopen(Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	struct termios newtio;
 
 	/* Open serial port device for reading and writing and not as controlling tty
@@ -60,9 +60,9 @@ int llopen(Settings* structDados, volatile int estado, volatile int tentativaEnv
 	printf("New termios structure set\n");
 
 	if (structDados.sender == TRUE)
-		sendSET(fd, &structDados, estado, tentativaEnvio, podeEnviar);
+		sendSET(fd, structDados, estado, tentativaEnvio, podeEnviar);
 	else if (structDados.sender == FALSE)
-		sendUA(fd, &structDados, estado);
+		sendUA(fd, structDados, estado);
 
 	return fd;
 }
@@ -71,7 +71,7 @@ int llopen(Settings* structDados, volatile int estado, volatile int tentativaEnv
 /*
  *	
  */
-int llwrite(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
+int llwrite(Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	int Ns = 0;
 	unsigned int i = 0;
 
@@ -92,7 +92,7 @@ int llwrite(Settings* structDados, volatile int estado, volatile int tentativaEn
 	CTRL_START[i++] = (structDados.maxSize >> 8) & 0xff;
 	CTRL_START[i++] = structDados.maxSize & 0xff;
 
-	if (linkwrite(CTRL_START, 11 + strlen(structDados.fileName) + 1, Ns, estado, tentativaEnvio, podeEnviar) < 0) return -1;
+	if (linkwrite(CTRL_START,structDados, 11 + strlen(structDados.fileName) + 1, Ns, estado, tentativaEnvio, podeEnviar) < 0) return -1;
 	Ns = (Ns + 1) % 2;
 
 	int resRead;
@@ -107,13 +107,13 @@ int llwrite(Settings* structDados, volatile int estado, volatile int tentativaEn
 		DATA_PACK[2] = (resRead >> 8) & 0xff;
 		DATA_PACK[3] = resRead & 0xff;
 
-		if (linkwrite(DATA_PACK, 4 + resRead, Ns) < 0) return -1;
+		if (linkwrite(DATA_PACK,structDados, 4 + resRead, Ns, estado, tentativaEnvio, podeEnviar) < 0) return -1;
 		Ns = (Ns + 1) % 2;
 	} while (resRead);
 
 	unsigned char CTRL_STOP[1];
 	CTRL_STOP[0] = 0x02; // Indica paragem //
-	if (linkwrite(CTRL_STOP, 1, Ns, estado, tentativaEnvio, podeEnviar) < 0) return -1;
+	if (linkwrite(CTRL_STOP,structDados, 1, Ns, estado, tentativaEnvio, podeEnviar) < 0) return -1;
 	Ns = (Ns + 1) % 2;
 
 	fclose(structDados.fp);
@@ -125,7 +125,7 @@ int llwrite(Settings* structDados, volatile int estado, volatile int tentativaEn
 /*
  *	
  */
-int llread(Settings* structDados) {
+int llread(Settings structDados) {
 	int Nr = 0;
 	int numread = 0;
 	unsigned char RR[5];
@@ -141,7 +141,7 @@ int llread(Settings* structDados) {
 	do {
 		unsigned char dataPackage[structDados.maxSize];
 
-		int packageSize = linkread(dataPackage);
+		int packageSize = linkread(dataPackage,structDados, duplicate);
 
 		if (packageSize == -1) {
 			REJ[2] = (Nr == 0) ? 0x05 : 0x25;
@@ -217,7 +217,7 @@ int llread(Settings* structDados) {
 /*
  *	
  */
-int llclose(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
+int llclose(Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	tentativaEnvio = 1;
 	estado = 0;
 
@@ -229,9 +229,9 @@ int llclose(Settings* structDados, volatile int estado, volatile int tentativaEn
 	DISC[4] = FLAG;
 
 	if (structDados.sender == TRUE)
-		senderDISC(DISC, structDados, dados, tentativaEnvio, podeEnviar);
+		senderDISC(DISC, structDados, estado, tentativaEnvio, podeEnviar);
 	else if (structDados.sender == FALSE)
-		receiverDISC(DISC, structDados, dados);
+		receiverDISC(DISC, structDados, estado);
 
 	if (tcsetattr(structDados.fd, TCSANOW, &oldtio) == -1) {
 		perror("tcsetattr");

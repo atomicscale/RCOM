@@ -19,7 +19,7 @@ unsigned char lastN = 255;
 /*
  *	
  */
-int linkwrite(unsigned char* data, int datasize, int Ns, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
+int linkwrite(unsigned char* data, Settings structDados, int datasize, int Ns, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	tentativaEnvio = 1;
 	podeEnviar = TRUE;
 	estado = 0;
@@ -148,7 +148,7 @@ int linkwrite(unsigned char* data, int datasize, int Ns, volatile int estado, vo
 /*
  *	
  */
-int linkread(unsigned char* dataPackage) {
+int linkread(unsigned char* dataPackage, Settings structDados, int duplicate) {
 	unsigned char c;
 	unsigned char buf[structDados.maxSize + 6];
 	int estado = 0;
