@@ -8,6 +8,9 @@
 #define TRUE 1
 #define FLAG 0x7e
 #define A 0x03
+#define DATA 0x00
+#define START 0x01
+#define END 0x02
 
 extern int linkwrite(unsigned char* data, Settings* structDados, int datasize, int Ns, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
 extern int linkread(unsigned char* dataPackage, Settings* structDados, int duplicate);

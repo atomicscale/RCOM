@@ -9,6 +9,9 @@
 #define TRUE 1
 #define FLAG 0x7e
 #define A 0x03
+#define DATA 0x00
+#define START 0x01
+#define END 0x02
 
 /*
  * Struct that allows us saving all the information about the transmission

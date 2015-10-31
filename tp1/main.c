@@ -78,18 +78,18 @@ void startstruct() {
 
 	int choicePort = -1;
 
+	
 	structDados = malloc(sizeof(Settings));
 	structDados->fp = malloc(sizeof(FILE));
-	structDados->fd =  malloc(sizeof(int));
+	structDados->fd =  0;
 	structDados->fileName = malloc(255 * sizeof(char) + 1);
-	structDados->filesize = malloc(sizeof(int));
-	structDados->sender = malloc(sizeof(int));
+	structDados->filesize = 0;
+	structDados->sender = 0;
 	/* structDados->port = malloc(20 * sizeof(char) + 1); doesnt need */ 
-	structDados->baudRate = malloc(sizeof(int));
-	structDados->timeout = malloc(sizeof(unsigned int));
-	structDados->numTransmissions = malloc(sizeof(unsigned int));
-	structDados->maxSize = malloc(sizeof(unsigned int));
-
+	structDados->baudRate = 0;
+	structDados->timeout = 0;
+	structDados->numTransmissions = 0;
+	structDados->maxSize = 0;
 
 	do {
 		limparEcra();
@@ -125,7 +125,6 @@ void startstruct() {
 	printf(". Which port will you use?\n");
 	scanf("%d", &choicePort);
 	snprintf(structDados->port, sizeof(structDados->port), "/dev/ttyS%d", choicePort);
-	printf("%s", structDados->port);
 	sleep(1);
 
 	do {

@@ -149,7 +149,7 @@ int llread(Settings* structDados) {
 			tcflush(structDados->fd, TCIFLUSH);
 			write(structDados->fd, REJ, 5);
 		}
-		else if (dataPackage[0] == 0x00) { //
+		else if (dataPackage[0] == DATA) { //
 			int posPackage = 0;
 			if (duplicate) printf("Duplicate frame!\n");
 			while (posPackage < packageSize && !duplicate) {
@@ -163,7 +163,7 @@ int llread(Settings* structDados) {
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados->fd, RR, 5);
 		}
-		else if (dataPackage[0] == 0x01) { //
+		else if (dataPackage[0] == START) { //
 			unsigned int i = 1;
 			unsigned int j;
 
@@ -193,7 +193,7 @@ int llread(Settings* structDados) {
 			RR[3] = RR[1] ^ RR[2];
 			write(structDados->fd, RR, 5);
 		}
-		else if (dataPackage[0] == 0x02) { //
+		else if (dataPackage[0] == END) { //
 			Nr = (Nr + 1) % 2;
 			RR[2] = (Nr == 0) ? 0x01 : 0x21;//
 			RR[3] = RR[1] ^ RR[2];

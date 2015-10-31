@@ -192,7 +192,7 @@ int linkread(unsigned char* dataPackage, Settings* structDados, int duplicate) {
 		case 4:
 		{
 			int megaEstado = 0;
-			if (c == 0x00) {
+			if (c == DATA) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c; // C
 				Controlo = c;
@@ -235,7 +235,7 @@ int linkread(unsigned char* dataPackage, Settings* structDados, int duplicate) {
 				}
 				estado = 5;
 			}
-			else if (c == 0x01) {
+			else if (c == START) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 
@@ -319,7 +319,7 @@ int linkread(unsigned char* dataPackage, Settings* structDados, int duplicate) {
 
 				estado = 5;
 			}
-			else if (c == 0x02) {
+			else if (c == END) {
 				bcc2 ^= c;
 				dataPackage[megaEstado++] = c;
 				estado = 5;
