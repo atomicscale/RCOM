@@ -13,12 +13,12 @@
 /*
  * Struct that allows us saving all the information about the transmission
  */
-typedef struct UserSettings {
+typedef struct{
     
 
     int fd;
     FILE* fp;
-    char fileName[255];
+    char* fileName;
     int filesize;
     int sender; // TRUE ou FALSE
     char port[20]; // Dispositivo /dev/ttySx
@@ -28,6 +28,7 @@ typedef struct UserSettings {
     unsigned int maxSize;
     
 } Settings;
+
 
 extern int llopen(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);
 extern int llwrite(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar);

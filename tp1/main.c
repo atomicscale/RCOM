@@ -13,7 +13,7 @@
 #define FALSE 0
 #define TRUE 1
 
-static Settings* structDados = malloc(sizeof(struct Settings)); /* malloc */
+static Settings* structDados; // Esta definida no app.h
 
 volatile int estado = 0, tentativaEnvio = 1, podeEnviar = TRUE;
 
@@ -75,7 +75,20 @@ void prepareReceiver() {
  * Get the information about the transmission
  */
 void startstruct() {
+
 	int choicePort = -1;
+
+	structDados = malloc(sizeof(Settings));
+	structDados->fp = malloc(sizeof(FILE));
+	structDados->fd =  malloc(sizeof(int));
+	structDados->fileName = malloc(255 * sizeof(char) + 1);
+	structDados->filesize = malloc(sizeof(int));
+	structDados->sender = malloc(sizeof(int));
+	/* structDados->port = malloc(20 * sizeof(char) + 1); doesnt need */ 
+	structDados->baudRate = malloc(sizeof(int));
+	structDados->timeout = malloc(sizeof(unsigned int));
+	structDados->numTransmissions = malloc(sizeof(unsigned int));
+	structDados->maxSize = malloc(sizeof(unsigned int));
 
 
 	do {
@@ -84,8 +97,8 @@ void startstruct() {
 		printf("    1. Sender \n");
 		printf("    2. Receiver \n");
 		char choice = getchar();
-		if (choice == '1'){
 
+		if (choice == '1'){
 			structDados->sender = TRUE;
 			break;
 		}
@@ -93,20 +106,27 @@ void startstruct() {
 			structDados->sender = FALSE;
 			break;
 		}
-		else continue;
+		else 
+			continue;
+
 	} while (TRUE);
 
-
-	if (structDados->sender) {
+	
+	if (structDados->sender == TRUE) {
 		limparEcra();
 		printf(". What's the name of the file you want to send?\n");
+		getchar();
 		gets(structDados->fileName);
 	}
+
+
 
 	limparEcra();
 	printf(". Which port will you use?\n");
 	scanf("%d", &choicePort);
 	snprintf(structDados->port, sizeof(structDados->port), "/dev/ttyS%d", choicePort);
+	printf("%s", structDados->port);
+	sleep(1);
 
 	do {
 		limparEcra();
@@ -148,7 +168,7 @@ void startstruct() {
 	printf(". How many times will your program try to send a package?\n");
 	scanf("%d", &structDados->numTransmissions);
 
-	if (structDados.sender) {
+	if (structDados->sender) {
 		limparEcra();
 		printf(". How many data bytes should each frame contain?\n");
 		scanf("%d", &structDados->maxSize);
@@ -188,10 +208,10 @@ int main(int argc, char** argv) {
 				prepareReceiver();
 
 			llclose(structDados, estado, tentativaEnvio, podeEnviar);
-			break;
+			return 0;
 		case 2:
 			printf("Exiting program! \n");
-			break;
+			return 0;
 		default:
 			continue;
 		}

@@ -23,13 +23,13 @@ int duplicate = FALSE;
 /*
  * Open serial port device for reading 
  */
-int llopen(Settings structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
+int llopen(Settings* structDados, volatile int estado, volatile int tentativaEnvio, volatile int podeEnviar) {
 	struct termios newtio;
 
 	/* Open serial port device for reading and writing and not as controlling tty
 	because we don't want to get killed if linenoise sends CTRL-C. */
-	int fd = open(structDados.port, O_RDWR | O_NOCTTY);
-	if (fd < 0) { perror(structDados.port); exit(-1); }
+	int fd = open(structDados->port, O_RDWR | O_NOCTTY);
+	if (fd < 0) { perror(structDados->port); exit(-1); }
 
 	if (tcgetattr(fd, &oldtio) == -1) { // save current port settings
 		perror("tcgetattr");
@@ -37,7 +37,7 @@ int llopen(Settings structDados, volatile int estado, volatile int tentativaEnvi
 	}
 
 	bzero(&newtio, sizeof(newtio));
-	newtio.c_cflag = structDados.baudRate | CS8 | CLOCAL | CREAD;
+	newtio.c_cflag = structDados->baudRate | CS8 | CLOCAL | CREAD;
 	newtio.c_iflag = IGNPAR;
 	newtio.c_oflag = 0;
 
@@ -59,9 +59,9 @@ int llopen(Settings structDados, volatile int estado, volatile int tentativaEnvi
 
 	printf("New termios structure set\n");
 
-	if (structDados.sender == TRUE)
+	if (structDados->sender == TRUE)
 		sendSET(fd, structDados, estado, tentativaEnvio, podeEnviar);
-	else if (structDados.sender == FALSE)
+	else if (structDados->sender == FALSE)
 		sendUA(fd, structDados, estado);
 
 	return fd;
