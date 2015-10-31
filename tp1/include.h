@@ -25,22 +25,3 @@ void startstruct();						/*  Initialize the type of transmission */
 
 void atendeAlarme();					/*  Function to control the conection */
 
-int llopen();							/*  Open The Serial Port */
-
-void sendSET(int fd);					/* 	Function to send the SET-TRAMA */
-
-void sendUA(int fd);					/* 	Function to send the UA-TRAMA */
-
-int llwrite();							/* 	Writting to the serial Port*/
-
-int linkwrite(unsigned char*, int, int);	/* Auxiliary function to write to the port */
-
-int llread();							/*  Reading from the serial port */
-
-int linkread(unsigned char*);			/* 	Auxiliary function to read to the port*/
-
-int llclose();							/* 	Closing the port */
-
-void senderDISC(unsigned char*);		/* 	Send the DIS-TRAMA */
-
-void receiverDISC(unsigned char*);		/* 	Receive the DIS-TRAMA */
